@@ -34,7 +34,7 @@
         </div>
         <div id="mapid"></div>
         <script>
-            const geojsonCollection = { type: "GeometryCollection", features: [] };
+            const geojsonCollection = { type: "FeatureCollection", features: [] };
             const map = L.map( 'mapid' ).setView( [ 46.227638, 2.213749 ], 6 );
 
             L.tileLayer( 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
