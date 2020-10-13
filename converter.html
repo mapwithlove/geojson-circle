@@ -1,0 +1,101 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
+
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script>
+    </head>
+    <style>
+        body { display: flex; margin: 0px; }
+        #panel { width: 100%; height: 100%; margin: 10px; }
+        #panel-instructions { width: 100%; height: 80px; }
+        #panel-input { width: 100%; height: 40%; }
+        #panel-output { width: 100%; height: 40%; }
+        #coords-input { width: 100%; height: 90%; }
+        #download-geojson { margin-top: 10px; margin-bottom: 20px; }
+        #geojson-output { width: 100%; height: 90%; }
+    </style>
+    <body>
+        <div id="panel">
+            <div id="panel-instructions">
+                <div>
+                    1 - Convert a AIP or SUPAIP Geometry from website : <a href="http://www.pap08.eu/ZA/volume-aerien.php" style="margin-bottom: 20px;">http://www.pap08.eu/ZA/volume-aerien.php</a>
+                </div>
+                <div>
+                    2 - Name your feature : <input id="feature-name" type="text" placeholder="feature name" />
+                </div>
+                <div>
+                    3 - Copy / Past the output array of coordinates in the first field
+                </div>
+                <div>
+                    4 - Copy / Past from last field to check the output geometry (FeatureCollection) on website : <a href="geojson.io" style="margin-bottom: 20px;">http://geojson.io/</a>
+                </div>
+                <div>
+                    5 - Download your GeoJSON file
+                </div>
+            </div>
+            <br><br>
+            <div id="panel-input">
+                <textarea id="coords-input" name="csv-input" rows="5" cols="33" placeholder="Output coordinates from http://www.pap08.eu/ZA/volume-aerien.php"></textarea>
+            </div>
+            <div id="panel-output">
+                <textarea id="geojson-output" name="geojson-output" rows="5" cols="33" placeholder="Geojson output"></textarea>
+            </div>
+            <button id="download-geojson" type="button" onclick="downloadGeojson()">Download GeoJSON output file</button>
+        </div>
+        <script>
+            const geojsonCollection = { type: "FeatureCollection", features: [] };
+
+            const downloadGeojson = () => {
+                var pom = document.createElement('a');
+                pom.setAttribute( 'href', 'data:text/plain;charset=utf-8,' + encodeURIComponent( JSON.stringify( geojsonCollection, null, 2 ) ) );
+                pom.setAttribute( 'download', "circles.geojson" );
+
+                if ( document.createEvent ) {
+                    var event = document.createEvent( 'MouseEvents' );
+                    event.initEvent( 'click', true, true );
+                    pom.dispatchEvent( event );
+                }
+                else {
+                    pom.click();
+                }
+            };
+
+            setInterval(() => {
+                const input = document.getElementById( "coords-input" ).value;
+
+                if ( input ) {
+                    let parsed = null;
+
+                    try {
+                        parsed = JSON.parse( input );
+                    }
+                    catch( parseError ) {
+                        console.error( "parseError:", parseError );
+                    }
+
+                    if ( parsed ) {
+                        geojsonCollection.features = [
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "type": "Polygon",
+                                    "coordinates": [ parsed.map( coords => coords.reverse() ) ],
+                                },
+                                "properties": {
+                                    "name": document.getElementById( "feature-name" ).value || null
+                                }
+                            }
+                        ]
+                        document.getElementById( "geojson-output" ).value = JSON.stringify( geojsonCollection, null, 2 );
+                    }
+                }
+            }, 33 );
+        </script>
+    </body>
+</html>
